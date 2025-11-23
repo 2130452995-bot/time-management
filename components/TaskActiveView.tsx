@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { TaskData } from '../types';
 import StepItem from './StepItem';
 import { generateMotivationalImage } from '../services/geminiService';
@@ -11,21 +11,33 @@ interface TaskActiveViewProps {
 
 const TaskActiveView: React.FC<TaskActiveViewProps> = ({ task, onUpdateTask, onBack }) => {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  // Use a ref to track the current task state for the async callback
+  const taskRef = useRef(task);
+
+  useEffect(() => {
+    taskRef.current = task;
+  }, [task]);
 
   useEffect(() => {
     const fetchImage = async () => {
-      if (!task.imageUrl && !isGeneratingImage) {
+      // Check the ref inside the effect to see if we still need an image
+      if (!taskRef.current.imageUrl && !isGeneratingImage) {
         setIsGeneratingImage(true);
-        const url = await generateMotivationalImage(task.title + ", " + task.originalInput);
+        const url = await generateMotivationalImage(taskRef.current.title + ", " + taskRef.current.originalInput);
         if (url) {
-          onUpdateTask({ ...task, imageUrl: url });
+          // Use the LATEST task state when updating
+          onUpdateTask({ ...taskRef.current, imageUrl: url });
         }
         setIsGeneratingImage(false);
       }
     };
-    fetchImage();
+    
+    // Only trigger if we don't have an image initially
+    if (!task.imageUrl) {
+        fetchImage();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount if image is missing
+  }, []); // Run once on mount
 
   const handleToggleStep = (stepId: string) => {
     const updatedSteps = task.steps.map(s => 
