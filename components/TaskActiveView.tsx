@@ -54,6 +54,16 @@ const TaskActiveView: React.FC<TaskActiveViewProps> = ({ task, onUpdateTask, onB
     });
   };
 
+  const handleRestart = () => {
+    const restartedSteps = task.steps.map(s => ({ ...s, isCompleted: false }));
+    onUpdateTask({
+        ...task,
+        steps: restartedSteps,
+        isCompleted: false,
+        completedAt: undefined
+    });
+  };
+
   const completedCount = task.steps.filter(s => s.isCompleted).length;
   const progress = Math.round((completedCount / task.steps.length) * 100);
 
@@ -104,7 +114,7 @@ const TaskActiveView: React.FC<TaskActiveViewProps> = ({ task, onUpdateTask, onB
           ))}
 
           {task.isCompleted && (
-            <div className="mt-8 p-6 bg-clay-100 rounded-2xl text-center animate-fade-in">
+            <div className="mt-8 p-6 bg-clay-100 rounded-2xl text-center animate-fade-in mb-8">
               <div className="inline-block p-3 bg-clay-200 rounded-full text-clay-600 mb-3">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -112,12 +122,20 @@ const TaskActiveView: React.FC<TaskActiveViewProps> = ({ task, onUpdateTask, onB
               </div>
               <h3 className="text-xl font-bold text-clay-700 mb-1">太棒了！</h3>
               <p className="text-clay-600">你迈出了一大步。休息一下，或者去历史记录看看你的成就。</p>
-              <button 
-                onClick={onBack}
-                className="mt-4 px-6 py-2 bg-clay-500 hover:bg-clay-600 text-white rounded-xl transition-colors"
-              >
-                完成并返回
-              </button>
+              <div className="flex flex-col sm:flex-row justify-center gap-3 mt-5">
+                <button 
+                    onClick={handleRestart}
+                    className="px-6 py-2 bg-sage-500 hover:bg-sage-600 text-white rounded-xl transition-colors shadow-sm"
+                >
+                    再做一次
+                </button>
+                <button 
+                    onClick={onBack}
+                    className="px-6 py-2 bg-white border border-clay-200 text-clay-600 hover:bg-clay-50 rounded-xl transition-colors"
+                >
+                    返回列表
+                </button>
+              </div>
             </div>
           )}
         </div>

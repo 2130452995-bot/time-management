@@ -10,7 +10,10 @@ import { v4 as uuidv4 } from 'uuid';
 const loadTasks = (): TaskData[] => {
   try {
     const stored = localStorage.getItem('microstep_tasks');
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    // Ensure we actually got an array back
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     console.error("Failed to load tasks", e);
     return [];
@@ -26,19 +29,18 @@ const saveTasks = (tasks: TaskData[]) => {
 };
 
 const App: React.FC = () => {
+  // Use lazy initialization for state. 
+  // This ensures we read from localStorage BEFORE the first render,
+  // preventing the "empty list overwrites storage" race condition.
+  const [tasks, setTasks] = useState<TaskData[]>(() => loadTasks());
+  
   const [view, setView] = useState<AppView>('input');
-  const [tasks, setTasks] = useState<TaskData[]>([]);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Save tasks whenever they change
   useEffect(() => {
-    setTasks(loadTasks());
-  }, []);
-
-  useEffect(() => {
-    if (tasks.length > 0) {
-      saveTasks(tasks);
-    }
+    saveTasks(tasks);
   }, [tasks]);
 
   const handleCreateTask = async (input: string) => {
@@ -79,8 +81,6 @@ const App: React.FC = () => {
   };
 
   const handleSelectTask = (task: TaskData) => {
-    // If task is completed, we might want to "restart" it or just view it.
-    // For now, let's just view/resume it.
     setCurrentTaskId(task.id);
     setView('active');
   };
